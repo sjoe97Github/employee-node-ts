@@ -1,0 +1,70 @@
+#
+# Notes for this revision of the docker-compose.yml file:
+# - The MySQL service is commented out, as the MySQL database is running on a separate host.
+# - The DB_HOST environment variable is set to the IP address of the host where the MySQL database is running.
+# - The DB_USER and DB_PASSWORD environment variables are set to the values of the corresponding
+#   environment variables in the host environment. Here is an example docker-compose up command:
+#    DB_USER=yourusername DB_PASSWORD=yourpassword docker-compose up
+# - the user 'DB_USER'@'DB_HOST' must have the necessary permissions to access the 'employees' database that
+#   is being accessed by the node application (the mysql service running on local machine).
+# - Here are the necessary privilege commands required to be run on the MySQL database:
+#     i.) GRANT ALL PRIVILEGES ON *.* TO 'DB_USER'@'DB_HOST'
+#     ii.) FLUSH PRIVILEGES
+#    iii.) If the user doesn't already exist, then run the following command before the GRANT:
+#          CREATE USER 'DB_USER'@'DB_HOST' IDENTIFIED BY 'DB_PASSWORD'
+#
+# Miscellaneous notes:
+# - command to find the IP address or hostname of the host machine (MacOS):
+#   - ipconfig getifaddr en0
+#   - scutil --get LocalHostName
+#   - hostname
+# - miscellaneous docker-compose commands:
+#   - docker-compose build
+#   - docker-compose up
+#   - docker-compose down
+#   - docker-compose ps
+#   - docker-compose logs
+#   - docker-compose exec app sh
+#   - docker-compose exec sh
+#   - docker-compose exec app ls
+#   - docker-compose exec app curl -I
+#
+#   - docker-compose exec app ping -c 4 10.0.0.50
+#   - docker-compose exec app mysql -h 192.168.1.100 -u root -p
+#   - docker-compose exec app sh -c 'apt-get update && apt-get install -y mysql-client'
+#   - docker-compose exec app mysql -h yourhostname -u yourusername -p
+#
+version: '3.8'
+
+services:
+  app:
+    image: employee-node-ts
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:3000"
+    environment:
+      - NODE_ENV=production
+      # - DB_HOST=db
+      - DB_HOST=10.0.0.50
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=employees
+    # depends_on:
+    #   - db
+
+  # The section pulls a MySQL image from Docker Hub.
+  # docker-compose up would start both this node service and the MySQL service container; and
+  # would require loading the employees DDL/data into the MySQL container (or restoring
+  # a backup of the employees database).
+  #
+  # For initial local testing, this is commented out and the DB_HOST variable pointed
+  # at the host where the MySQL database is running.
+  # db:
+  #   image: mysql:8.4.0
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: 
+  #     MYSQL_DATABASE: employees
+  #   ports:
+  #     - "3306:3306"
