@@ -23,6 +23,7 @@ build/
 .env
 
 # IDEs and editors
+.history/
 .vscode/
 .idea/
 *.swp
