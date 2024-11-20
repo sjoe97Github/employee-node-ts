@@ -18,6 +18,8 @@ node_modules/
 # Build directories
 dist/
 build/
+deploy/
+
 
 # Environment variables
 .env
