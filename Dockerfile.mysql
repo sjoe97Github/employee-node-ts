@@ -1,0 +1,18 @@
+FROM mysql:8.4.0
+
+# Install envsubst
+# RUN apt-get update && apt-get install -y gettext-base
+
+EXPOSE 3306
+
+# Copy the entrypoint script
+COPY ./resources/dbsetup/mysql/entrypoint.sh /entrypoint.sh
+
+# Make the entrypoint script executable
+RUN chmod +x ./entrypoint.sh
+
+# Use the custom entrypoint script
+ENTRYPOINT ["./entrypoint.sh"]
+
+# Default command
+CMD ["mysqld"]

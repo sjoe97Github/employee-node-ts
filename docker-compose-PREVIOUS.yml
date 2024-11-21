@@ -3,10 +3,8 @@
 # - The MySQL service is commented out, as the MySQL database is running on a separate host.
 # - The DB_HOST environment variable is set to the IP address of the host where the MySQL database is running.
 # - The DB_USER and DB_PASSWORD environment variables are set to the values of the corresponding
-#   environment variables in the host environment. Here are example docker-compose up commands:
-#    MYSQL_DATABASE=yourdbname  DB_USER=yourusername DB_PASSWORD=yourpassword docker-compose up
-#    docker-compose up -e MYSQL_DATABASE=yourdbname -e DB_USER=yourusername -e DB_PASSWORD=yourpassword
-#
+#   environment variables in the host environment. Here is an example docker-compose up command:
+#    DB_USER=yourusername DB_PASSWORD=yourpassword docker-compose up
 # - the user 'DB_USER'@'DB_HOST' must have the necessary permissions to access the 'employees' database that
 #   is being accessed by the node application (the mysql service running on local machine).
 # - Here are the necessary privilege commands required to be run on the MySQL database:
@@ -47,34 +45,26 @@ services:
     ports:
       - "8080:3000"
     environment:
-      # - DB_HOST=10.0.0.50
-      - DB_HOST=db
+      - NODE_ENV=production
+      # - DB_HOST=db
+      - DB_HOST=10.0.0.50
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${MYSQL_DATABASE}
-      - NODE_ENV=production
-    depends_on:
-      - db
+      - DB_NAME=employees
+    # depends_on:
+    #   - db
 
   # The section pulls a MySQL image from Docker Hub.
   # docker-compose up would start both this node service and the MySQL service container; and
   # would require loading the employees DDL/data into the MySQL container (or restoring
   # a backup of the employees database).
   #
-  db:
-    build:
-      context: .
-      dockerfile: Dockerfile.mysql
-    environment:
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${MYSQL_DATABASE}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD} 
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-    ports:
-      - "3306:3306"
-    volumes:
-      - ./resources/dbsetup/mysql/entrypoint.sh:/entrypoint.sh
-      - ./resources/dbsetup/mysql/initializedb.sql.template:/docker-entrypoint-initdb.d/initializedb.sql.template
-      - ./resources/dbsetup/mysql/employees-backup-initial.sql:/docker-entrypoint-initdb.d/employees-backup-initial.sql
-    entrypoint: ["/entrypoint.sh"]
+  # For initial local testing, this is commented out and the DB_HOST variable pointed
+  # at the host where the MySQL database is running.
+  # db:
+  #   image: mysql:8.4.0
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: 
+  #     MYSQL_DATABASE: employees
+  #   ports:
+  #     - "3306:3306"
