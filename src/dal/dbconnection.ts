@@ -11,4 +11,5 @@ export const db = mysql.createPool({
     user: process.env.DB_USER || 'yourusername',
     password: process.env.DB_PASSWORD || 'yourpassword',
     database: process.env.DB_NAME || 'employees',
+    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3306,
 });
