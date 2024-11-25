@@ -14,4 +14,7 @@ export const configSchema = zod.object({
     DB_NAME: zod.string(),
 });
 
-export type Config = zod.infer<typeof configSchema>;
+type AppConfiguration = zod.infer<typeof configSchema>;
+interface AppConfigurationInterface extends AppConfiguration { }
+
+export { AppConfiguration, AppConfigurationInterface }; 

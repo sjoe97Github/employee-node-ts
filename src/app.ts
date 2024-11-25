@@ -1,14 +1,31 @@
 import express from 'express';
-import employeesRouter from './routes/employees';
 import { ConfigManager } from './config/config-manager';
+import { DbConnection } from './dal/dbconnection';
 
-const app = express();
-app.use(express.json());
+async function initializeApp() {
+    const app = express();
+    app.use(express.json());
 
-const config = ConfigManager.getInstance();
+    const configurationManager = ConfigManager.getInstance();
 
-app.use('/employees', employeesRouter);
+    try {
+        await configurationManager.initialize();
+        const appConfig = configurationManager.getConfig();
+        console.log('Running with config:', appConfig);
 
-app.listen(config.getAppPort(), () => {
-    console.log('Server running on port 3000');
-});
+        DbConnection.getInstance().connect(appConfig);
+
+        // Import and use the employeesRouter only after the configuration is loaded
+        const employeesRouter = (await import('./routes/employees')).default;
+        app.use('/employees', employeesRouter);
+
+        app.listen(appConfig.APP_PORT, () => {
+            console.log(`Server running on port ${appConfig.APP_PORT}`);
+        });
+    } catch (error) {
+        console.error('Error loading configuration:', error);
+        process.exit(1);
+    }
+}
+
+initializeApp();

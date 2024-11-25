@@ -1,11 +1,21 @@
-import { db } from '../dal/dbconnection';
+import { DbConnection } from '../dal/dbconnection';
 import { Employee } from '../models/EntityTypes';
 import { RowDataPacket, FieldPacket } from 'mysql2';
+import * as mysql from 'mysql2/promise';
+
+// let db = DbConnection.getInstance().GetDbPool();
 
 export class EmployeeService {
+    private db: mysql.Pool;
+    // constructor() 
+    public constructor() {
+        console.log('EmployeeService constructor');
+        this.db = DbConnection.getInstance().GetDbPool();
+    }
+
     async getEmployees(): Promise<Employee[]> {
         try {
-            const [rows] = await db.query('SELECT * FROM employees limit 10');
+            const [rows] = await this.db.query('SELECT * FROM employees limit 10');
             return rows as Employee[];
         } catch (error) {
             throw new Error('Error retrieving employees');
@@ -14,7 +24,7 @@ export class EmployeeService {
 
     async getEmployeeById(id: number): Promise<Employee> {
         try {
-            const [rows]: [RowDataPacket[], FieldPacket[]] = await db.query('SELECT * FROM employees WHERE emp_no = ?', [id]);
+            const [rows]: [RowDataPacket[], FieldPacket[]] = await this.db.query('SELECT * FROM employees WHERE emp_no = ?', [id]);
             if (rows.length === 0) {
                 throw new Error('Employee not found');
             }
@@ -26,7 +36,7 @@ export class EmployeeService {
 
     async getEmployeeByFirstName(firstName: string): Promise<Employee> {
         try {
-            const [rows]: [RowDataPacket[], FieldPacket[]] = await db.query('SELECT * FROM employees WHERE first_name = ?', [firstName]);
+            const [rows]: [RowDataPacket[], FieldPacket[]] = await this.db.query('SELECT * FROM employees WHERE first_name = ?', [firstName]);
             if (rows.length === 0) {
                 throw new Error('Employee not found');
             }
@@ -54,7 +64,7 @@ export class EmployeeService {
 
         try {
             console.log('Adding employee:', employee);
-            const [result]: [RowDataPacket[], any] = await db.query(query, values);
+            const [result]: [RowDataPacket[], any] = await this.db.query(query, values);
             console.log('Employee added:', result);
             return result[0] as Employee;
             // const insertedEmployee: Employee = {
@@ -89,7 +99,7 @@ export class EmployeeService {
         ];
 
         try {
-            const [result]: [RowDataPacket[], any] = await db.query(query, values);
+            const [result]: [RowDataPacket[], any] = await this.db.query(query, values);
             return result[0] as Employee;
         } catch (error) {
             console.error('Error updating employee:', error);
@@ -100,7 +110,7 @@ export class EmployeeService {
     async deleteEmployee(id: number): Promise<void> {
         try {
             console.log('Deleting employee with id:', id);
-            const [result]: [any, FieldPacket[]] = await db.query('DELETE FROM employees WHERE emp_no = ?', [id]);
+            const [result]: [any, FieldPacket[]] = await this.db.query('DELETE FROM employees WHERE emp_no = ?', [id]);
             if (result.affectedRows === 0) {
                 console.log('Employee not found');
                 throw new Error('Employee not found');
