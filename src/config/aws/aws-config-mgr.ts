@@ -15,9 +15,20 @@ export class ConfigFromAWS {
     private secretName: string;
     private client: SecretsManagerClient;
 
+    // constructor() {
+    //     this.secretName = SECRET_NAME;
+    //     this.client = new SecretsManagerClient();
+    // }
     constructor() {
-        this.secretName = SECRET_NAME;
-        this.client = new SecretsManagerClient();
+        this.secretName = process.env.SECRET_NAME || SECRET_NAME;
+        this.client = new SecretsManagerClient({
+            region: process.env.AWS_REGION || 'us-west-2',
+            credentials: {
+                accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+            },
+            endpoint: process.env.AWS_ENDPOINT || undefined, // Specify the custom endpoint if needed
+        });
     }
 
     public async getDatabaseCredentials(): Promise<DatabaseConfig | undefined> {

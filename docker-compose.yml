@@ -8,7 +8,7 @@
 # - the user 'DB_USER'@'DB_HOST' must have the necessary permissions to access the 'employees' database that
 #   is being accessed by the node application (the mysql service running on local machine).
 # - Here are the necessary privilege commands required to be run on the MySQL database:
-#     i.) GRANT ALL PRIVILEGES ON *.* TO 'DB_USER'@'DB_HOST'
+#      i.) GRANT ALL PRIVILEGES ON *.* TO 'DB_USER'@'DB_HOST'
 #     ii.) FLUSH PRIVILEGES
 #    iii.) If the user doesn't already exist, then run the following command before the GRANT:
 #          CREATE USER 'DB_USER'@'DB_HOST' IDENTIFIED BY 'DB_PASSWORD'
@@ -37,6 +37,21 @@
 version: '3.8'
 
 services:
+  db:
+    image: mysql:8.4.0
+    ports:
+      - "3307:3306"  # Map the container's port 3306 to port 3307 on your host
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+    volumes:
+      - ./init/mysql/sql_scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysql", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}", "-e", "SELECT 1"]
+      interval: 15s
+      timeout: 180s
+      retries: 10  
+
   app:
     image: employee-node-ts
     build:
@@ -53,8 +68,13 @@ services:
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
-    # depends_on:
-    #   - db
+      - DB_PORT=${DB_PORT}
+      - AWS_REGION=${AWS_REGION},
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID},
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY},
+    depends_on:
+      db:
+        condition: service_healthy
 
   # The section pulls a MySQL image from Docker Hub.
   # docker-compose up would start both this node service and the MySQL service container; and
